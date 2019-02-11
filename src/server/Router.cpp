@@ -1,46 +1,27 @@
-#include "Router.hpp"
+#include "router.hpp"
 
-void rest::Router::processed(const method method, http_request & request) {
-	const auto path_t = uri::decode(request.relative_uri().path());
-	const auto path_s = utility::conversions::to_utf8string(path_t);
+using namespace utility::conversions;
 
-	if (_routes.find(path_s) == _routes.end()) {
-		request.reply(http_code::NotFound);
-		return;
-	}
-
-	std::vector<utility::string_t> paths = uri::split_path(path_t);
-	paths.push_back(U("/"));
-	std::rotate(paths.rbegin(), paths.rbegin() + 1, paths.rend());
+void rest::router::processed(const method method, http_request & request) {
+	const auto path = uri::decode(request.relative_uri().path());
+	const auto path_components = uri::split_path(path);
 
 	http_response response(http_code::OK);
+	
+	try {
+		invoke_filter_before(path_components, request, response);
 
-	std::string tempPath = "";
-	std::vector<std::function<void(http_request, http_response)>> postFilters;
-	for (const auto & path : paths) {
-		tempPath += utility::conversions::to_utf8string(path);
+		auto path_str = to_utf8string(path);
+		if (invoke_route(path_str, method, request, response)) {
+			invoke_handler(&path_str, handler_type::NOT_FOUND, request, response);
+		}
 
-		if (_filters[tempPath][0]) {
-			_filters[tempPath][0](request, response);
-		}
-		if (_filters[tempPath][1]) {
-			postFilters.push_back(_filters[tempPath][1]);
-		}
+		invoke_filter_after(path_components, request, response);
 	}
-
-	_routes[path_s][static_cast<uint8_t>(method)](request, response);
-
-	for (const auto & fnc : postFilters) {
-		fnc(request, response);
+	catch (std::exception & e) {
+		invoke_handler(&e, handler_type::EXCEPTION, request, response);
 	}
 
 	request.reply(response);
-}
-
-void rest::Router::register_filter(const int index, const std::string & path, std::function<void(http_request, http_response)> handle) {
-	_filters[path][index] = handle;
-}
-void rest::Router::register_route(const method method, const std::string & path, std::function<void(http_request, http_response)> handle) {
-	_routes[path][static_cast<uint8_t>(method)] = handle;
 }
 

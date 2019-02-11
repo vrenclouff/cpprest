@@ -1,12 +1,18 @@
 #pragma once
 
 #include "Definitions.hpp"
+#include <map>
+#include <array>
 
 namespace rest {
 
-	class Route {
+	class route {
+	private:
+		std::map<std::string, std::array<std::function<void(http_request, http_response)>, static_cast<size_t>(method::count)>> _routes;
+
 	protected:
-		virtual void register_route(const method method, const std::string & path, std::function<void(http_request, http_response)> handle) = 0;
+		int register_route(const method method, const std::string & path, std::function<void(http_request, http_response)> handle);
+		int invoke_route(const std::string & path, const method method, http_request & request, http_response & response);
 	public:
 		void del(const std::string & path, std::function<void(http_request, http_response)> handle)		{ register_route(method::DEL, path, handle); };
 		void get(const std::string & path, std::function<void(http_request, http_response)> handle)		{ register_route(method::GET, path, handle); };

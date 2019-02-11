@@ -14,7 +14,6 @@ namespace rest {
 	using uri = web::uri;
 	using http_method = web::http::methods;
 	using json = web::json::value;
-
 	using http_code = web::http::status_codes;
 
 	enum class method : uint8_t {
@@ -28,5 +27,16 @@ namespace rest {
 		POST,
 		PUT,
 		TRCE,
+
+		count = 10,
+	};
+
+
+
+	enum class handler_type : uint8_t {
+		EXCEPTION,
+		NOT_FOUND,
+
+		count = 2,
 	};
 }
