@@ -8,7 +8,7 @@ The C++ REST is a server-side project wrapped [cpprestsdk](https://github.com/Mi
 #include "server/Server.hpp"
 ````
 
-## Inicialization
+## Initialization
 
 By default, server runs on localhost on port 8080. If you want to set another port and hostname, add as param port or hostname and port.
 
